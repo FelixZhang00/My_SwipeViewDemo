@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="@dimen/delteViewWidth"
+              android:layout_height="@dimen/delteViewHeight"
+              android:background="#F4564E"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        android:text="delete"
+        android:textColor="#fff"
+        android:gravity="center"
+        android:textSize="22sp"
+        android:padding="5dp"
+        />
+
+</LinearLayout>
