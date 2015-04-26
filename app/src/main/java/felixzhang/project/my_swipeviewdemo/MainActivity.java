@@ -65,7 +65,7 @@ public class MainActivity extends ActionBarActivity implements SwipeView.OnSwipe
      * 是否存在未关闭的条目
      */
     private boolean isExistUnClosed() {
-        return unClosedSwipeViews.size() != 0;
+        return unClosedSwipeViews.size() > 0;
     }
 
     @Override
@@ -76,6 +76,7 @@ public class MainActivity extends ActionBarActivity implements SwipeView.OnSwipe
     @Override
     public void onOpen(SwipeView swipeView) {
         if (!unClosedSwipeViews.contains(swipeView)) {
+            closeAllSwipeView();
             unClosedSwipeViews.add(swipeView);
         }
     }
@@ -123,6 +124,11 @@ public class MainActivity extends ActionBarActivity implements SwipeView.OnSwipe
                 @Override
                 public void onClick(View v) {
                     lists.remove(position);
+
+//                    unClosedSwipeViews.remove(holder.swipeView);   //这种写法不对
+
+                    closeAllSwipeView();
+                    holder.swipeView.removeSwipeStatusChangeListener();
                     notifyDataSetChanged();
                 }
             });

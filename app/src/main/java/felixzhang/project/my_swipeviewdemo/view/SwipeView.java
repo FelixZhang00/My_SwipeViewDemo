@@ -168,7 +168,7 @@ public class SwipeView extends FrameLayout {
         ViewCompat.postInvalidateOnAnimation(SwipeView.this);  //动画刷新
     }
 
-    public void fastClose(){
+    public void fastClose() {
 
     }
 
@@ -259,6 +259,9 @@ public class SwipeView extends FrameLayout {
         Open, Close, Swiping;
     }
 
+    public void removeSwipeStatusChangeListener() {
+        mOnSwipeStatusChangeListener = null;
+    }
 
     private OnSwipeStatusChangeListener mOnSwipeStatusChangeListener;
 
