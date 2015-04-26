@@ -4,12 +4,10 @@
                 android:layout_height="match_parent"
                 tools:context=".MainActivity">
 
-    <felixzhang.project.my_swipeviewdemo.view.SwipeView
+    <ListView
+        android:id="@+id/listview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
-        <include layout="@layout/layout_content"/>
-        <include layout="@layout/layout_delete"/>
-    </felixzhang.project.my_swipeviewdemo.view.SwipeView>
+        android:layout_height="match_parent"
+        />
 
 </RelativeLayout>
