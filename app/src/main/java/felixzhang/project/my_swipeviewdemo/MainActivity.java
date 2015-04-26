@@ -5,15 +5,22 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import felixzhang.project.my_swipeviewdemo.view.SwipeView;
 
-public class MainActivity extends ActionBarActivity {
+
+/**
+ *
+ */
+public class MainActivity extends ActionBarActivity implements SwipeView.OnSwipeStatusChangeListener {
 
 
     private static final String TAG = "MainActivity";
@@ -35,6 +42,55 @@ public class MainActivity extends ActionBarActivity {
         mAdapter = new MyAdapter(this, R.layout.list_item, mList);
         mListView.setAdapter(mAdapter);
 
+        mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                if (isExistUnClosed()) {
+                    closeAllSwipeView();
+                }
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
+            }
+        });
+
+    }
+
+
+    private ArrayList<SwipeView> unClosedSwipeViews = new ArrayList<SwipeView>();
+
+    /**
+     * 是否存在未关闭的条目
+     */
+    private boolean isExistUnClosed() {
+        return unClosedSwipeViews.size() != 0;
+    }
+
+    @Override
+    public void onClose(SwipeView swipeView) {
+        unClosedSwipeViews.remove(swipeView);
+    }
+
+    @Override
+    public void onOpen(SwipeView swipeView) {
+        if (!unClosedSwipeViews.contains(swipeView)) {
+            unClosedSwipeViews.add(swipeView);
+        }
+    }
+
+    @Override
+    public void onSwiping(SwipeView swipeView) {
+        if (!unClosedSwipeViews.contains(swipeView)) {
+            closeAllSwipeView();
+        }
+    }
+
+    private void closeAllSwipeView() {
+        for (SwipeView swipeView : unClosedSwipeViews) {
+            swipeView.close();
+        }
     }
 
 
@@ -55,8 +111,11 @@ public class MainActivity extends ActionBarActivity {
             if (convertView == null) {
                 convertView = View.inflate(mContext, mResource, null);
             }
+
             holder = getViewHolder(convertView);
-            Item item = lists.get(position);
+            holder.swipeView.setOnSwipeStatusChangeListener(MainActivity.this);
+
+            final Item item = lists.get(position);
             holder.contentView.setText(item.content);
             holder.deleteView.setText(item.delete);
 
@@ -67,6 +126,18 @@ public class MainActivity extends ActionBarActivity {
                     notifyDataSetChanged();
                 }
             });
+
+            holder.contentView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isExistUnClosed()) {
+                        closeAllSwipeView();
+                    } else {      //只有此时才contentview才可被点击
+                        Toast.makeText(MainActivity.this, item.content, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
             return convertView;
         }
 
@@ -83,10 +154,12 @@ public class MainActivity extends ActionBarActivity {
 
         class ViewHolder {
             TextView contentView, deleteView;
+            SwipeView swipeView;
 
             public ViewHolder(View convertView) {
                 contentView = (TextView) convertView.findViewById(R.id.content);
                 deleteView = (TextView) convertView.findViewById(R.id.delete);
+                swipeView = (SwipeView) convertView.findViewById(R.id.swipeview);
             }
 
 

@@ -90,7 +90,7 @@ public class SwipeView extends FrameLayout {
          */
         @Override
         public int getViewHorizontalDragRange(View child) {
-            return super.getViewHorizontalDragRange(child);
+            return deleteViewWidth;
         }
 
         /**
@@ -111,6 +111,26 @@ public class SwipeView extends FrameLayout {
             } else if (changedView == deleteView) {
                 contentView.layout(contentView.getLeft() + dx, 0, contentView.getRight() + dx, contentView.getBottom());
             }
+
+            //状态发生改变
+            if (contentView.getLeft() == 0 && mStatus != SwipeStatus.Close) {
+                mStatus = SwipeStatus.Close;
+                if (mOnSwipeStatusChangeListener != null) {
+                    mOnSwipeStatusChangeListener.onClose(SwipeView.this);
+                }
+            } else if (contentView.getLeft() == -deleteViewWidth && mStatus != SwipeStatus.Open) {
+                mStatus = SwipeStatus.Open;
+                if (mOnSwipeStatusChangeListener != null) {
+                    mOnSwipeStatusChangeListener.onOpen(SwipeView.this);
+                }
+            } else if (mStatus != SwipeStatus.Swiping) {
+                mStatus = SwipeStatus.Swiping;
+                if (mOnSwipeStatusChangeListener != null) {
+                    mOnSwipeStatusChangeListener.onSwiping(SwipeView.this);
+                }
+            }
+
+
         }
 
         /**
@@ -123,16 +143,34 @@ public class SwipeView extends FrameLayout {
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
             super.onViewReleased(releasedChild, xvel, yvel);
 
-            if (contentView.getLeft() < -deleteViewWidth / 2) {   //滑动条打开状态
-                mViewDragHelper.smoothSlideViewTo(contentView, -deleteViewWidth, 0);
-            } else {          //滑动条关闭状态
-                mViewDragHelper.smoothSlideViewTo(contentView, 0, 0);
+            if (contentView.getLeft() < -deleteViewWidth / 2) {   //滑动条打开
+                open();
+            } else {          //滑动条关闭
+                close();
             }
-            //
-            ViewCompat.postInvalidateOnAnimation(SwipeView.this);  //动画刷新
+
         }
     };
 
+    /**
+     * 打开滑动条
+     */
+    public void open() {
+        mViewDragHelper.smoothSlideViewTo(contentView, -deleteViewWidth, 0);
+        ViewCompat.postInvalidateOnAnimation(SwipeView.this);  //动画刷新
+    }
+
+    /**
+     * 关闭滑动条
+     */
+    public void close() {
+        mViewDragHelper.smoothSlideViewTo(contentView, 0, 0);
+        ViewCompat.postInvalidateOnAnimation(SwipeView.this);  //动画刷新
+    }
+
+    public void fastClose(){
+
+    }
 
     /**
      * Scroller帮助计算好view在某个时间点会处于某个位置，达到动画的效果
@@ -140,7 +178,7 @@ public class SwipeView extends FrameLayout {
     @Override
     public void computeScroll() {
         super.computeScroll();
-        if(mViewDragHelper.continueSettling(true)){     //内部有Scroller计算位置和移动
+        if (mViewDragHelper.continueSettling(true)) {     //内部有Scroller计算位置和移动
             ViewCompat.postInvalidateOnAnimation(SwipeView.this);       //刷新当前view
         }
 
@@ -151,10 +189,30 @@ public class SwipeView extends FrameLayout {
         return mViewDragHelper.shouldInterceptTouchEvent(ev);
     }
 
+    private int lastX, lastY;
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        mViewDragHelper.processTouchEvent(event);
+        int x = (int) event.getX();
+        int y = (int) event.getY();
 
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                break;
+            case MotionEvent.ACTION_MOVE:
+                int dx = x - lastX;
+                int dy = y - lastY;
+                if (Math.abs(dx) > Math.abs(dy)) {          //想要横向滑
+                    requestDisallowInterceptTouchEvent(true); //拦截该事件，不让listview处理
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        lastX = x;
+        lastY = y;
+
+        mViewDragHelper.processTouchEvent(event);
         //消费掉此触摸事件，不向上返回
         return true;
     }
@@ -191,5 +249,29 @@ public class SwipeView extends FrameLayout {
         super.onLayout(changed, left, top, right, bottom);
         contentView.layout(0, 0, contentViewWidth, contentViewHeight);
         deleteView.layout(contentViewWidth, 0, contentViewWidth + deleteViewWidth, deleteViewHeight);
+    }
+
+
+    //当前的状态
+    private SwipeStatus mStatus;
+
+    enum SwipeStatus {
+        Open, Close, Swiping;
+    }
+
+
+    private OnSwipeStatusChangeListener mOnSwipeStatusChangeListener;
+
+    public interface OnSwipeStatusChangeListener {
+        void onClose(SwipeView swipeView);
+
+        void onOpen(SwipeView swipeView);
+
+        void onSwiping(SwipeView swipeView);
+    }
+
+    //暴露给外部：状态发生改变
+    public void setOnSwipeStatusChangeListener(OnSwipeStatusChangeListener onSwipeStatusChangeListener) {
+        mOnSwipeStatusChangeListener = onSwipeStatusChangeListener;
     }
 }
